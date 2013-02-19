@@ -34,8 +34,14 @@ enum Pin {
 	Pin_RxD   = 16
 };
 
-private:
-	QGpio();
+public:
+enum PinMode {
+	PinMode_Input,
+	PinMode_Output
+};
+
+public:
+	QGpio(QObject * parent = NULL);
 
 private:
 	Q_DECLARE_PRIVATE(QGpio);
