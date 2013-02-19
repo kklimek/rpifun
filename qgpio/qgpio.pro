@@ -7,7 +7,6 @@
 TEMPLATE = lib
 TARGET = qgpio
 
-LIBS += -lwiringPi
+QT -= gui webkit sql
 
-HEADERS += QGpio.h
-SOURCES += QGpio.cpp
+include(qgpio.pri)
