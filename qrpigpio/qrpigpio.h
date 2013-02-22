@@ -10,6 +10,13 @@ class QRpiGpio: public QObject
 Q_OBJECT
 
 public:
+enum PinValue
+{
+	PinValue_High = 0,
+	PinValue_Low  = 1
+};
+
+public:
 /**
  * Pin mapping reflecting wiringPi pin numbers
  * https://projects.drogon.net/raspberry-pi/wiringpi/pins/
@@ -42,6 +49,12 @@ enum PinMode {
 
 public:
 	QRpiGpio(QObject * parent = NULL);
+
+	void setPinMode(Pin, PinMode, PinValue initWithValue = PinValue_High);
+	void writePin(Pin, PinValue);
+
+	void delayMs(quint32 miliseconds);
+	void delayUs(quint32 microseconds);
 
 private:
 	Q_DECLARE_PRIVATE(QRpiGpio);
