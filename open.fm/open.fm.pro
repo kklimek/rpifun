@@ -5,4 +5,4 @@ QT -= gui
 
 SOURCES += main.cpp
 
-include(../qgpio/qgpio.pri)
+include(../qrpigpio/qrpigpio.pri)

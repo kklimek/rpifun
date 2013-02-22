@@ -1,12 +1,12 @@
 #include <QCoreApplication>
 
-#include <QGpio>
+#include <QRpiGpio>
 
 int main(int argc, char * argv[])
 {
 	QCoreApplication app(argc, argv);
 
-	QGpio gpio;
+	QRpiGpio gpio;
 
 	return app.exec();
 }

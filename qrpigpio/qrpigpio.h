@@ -1,11 +1,11 @@
-#ifndef __Q_GPIO_H_
-#define __Q_GPIO_H_
+#ifndef __QRPIGPIO_H_
+#define __QRPIGPIO_H_
 
 #include <QObject>
 
-class QGpioPrivate;
+class QRpiGpioPrivate;
 
-class QGpio: public QObject
+class QRpiGpio: public QObject
 {
 Q_OBJECT
 
@@ -41,12 +41,12 @@ enum PinMode {
 };
 
 public:
-	QGpio(QObject * parent = NULL);
+	QRpiGpio(QObject * parent = NULL);
 
 private:
-	Q_DECLARE_PRIVATE(QGpio);
-	QGpioPrivate * const d_ptr;
+	Q_DECLARE_PRIVATE(QRpiGpio);
+	QRpiGpioPrivate * const d_ptr;
 };
 
-#endif // __Q_GPIO_H_
+#endif // __QRPIGPIO_H_
 
