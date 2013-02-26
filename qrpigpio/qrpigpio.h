@@ -43,18 +43,26 @@ enum Pin {
 
 public:
 enum PinMode {
+	PinMode_Unset,
 	PinMode_Input,
 	PinMode_Output
 };
 
 public:
 	QRpiGpio(QObject * parent = NULL);
+	~QRpiGpio();
 
-	void setPinMode(Pin, PinMode, PinValue initWithValue = PinValue_High);
-	void writePin(Pin, PinValue);
+	bool setOutput(Pin, PinValue initialValue = PinValue_High);
+	bool setInput(Pin);
+	bool writePin(Pin, PinValue);
 
 	void delayMs(quint32 miliseconds);
 	void delayUs(quint32 microseconds);
+
+signals:
+	void interrupted(QRpiGpio::Pin, QRpiGpio::PinValue);
+	void raised(QRpiGpio::Pin);
+	void fallen(QRpiGpio::Pin);
 
 private:
 	Q_DECLARE_PRIVATE(QRpiGpio);
