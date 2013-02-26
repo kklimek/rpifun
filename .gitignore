@@ -1,5 +1,6 @@
 *.o
 moc_*.cpp
+*.moc
 Makefile
 *.so
 *.so.*
