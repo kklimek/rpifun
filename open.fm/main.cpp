@@ -35,6 +35,14 @@ public slots:
 	void raised(QRpi::P1Header::Pin pin) {
 		qDebug() << Q_FUNC_INFO << pin;
 	}
+
+	void pressed() {
+		qDebug() << Q_FUNC_INFO << sender();
+	}
+
+	void released() {
+		qDebug() << Q_FUNC_INFO << sender();
+	}
 };
 
 void lcd_pulse(QRpi::P1Header * gpio)
@@ -132,10 +140,6 @@ int main(int argc, char * argv[])
 	DebugOutput out;
 	QRpi::P1Header gpio;
 
-	QObject::connect(&gpio, SIGNAL(interrupted(QRpi::P1Header::Pin, QRpi::P1Header::PinValue)), &out, SLOT(interrupted(QRpi::P1Header::Pin, QRpi::P1Header::PinValue)));
-	QObject::connect(&gpio, SIGNAL(fallen(QRpi::P1Header::Pin)), &out, SLOT(fallen(QRpi::P1Header::Pin)));
-	QObject::connect(&gpio, SIGNAL(raised(QRpi::P1Header::Pin)), &out, SLOT(raised(QRpi::P1Header::Pin)));
-
 	gpio.setOutput(LCD_E, QRpi::P1Header::PinValue_High);
 	gpio.setOutput(LCD_RS, QRpi::P1Header::PinValue_High);
 	gpio.setOutput(LCD_D4, QRpi::P1Header::PinValue_High);
@@ -149,9 +153,11 @@ int main(int argc, char * argv[])
 	lcd_write_string(&gpio, "Testing", true);
 
 
-	QRpi::P1Header::Pin pinNo = QRpi::P1Header::Pin_GPIO7;
+	QRpi::TactSwitch tact(QRpi::P1Header::Pin_GPIO7);
+	tact.setDebounceInterval(200); // I bought reeaaaaaly crappy tact switches
 
-	gpio.setInput(pinNo);
+	QObject::connect(&tact, SIGNAL(pressed()), &out, SLOT(pressed()));
+	QObject::connect(&tact, SIGNAL(released()), &out, SLOT(released()));
 
 	return app.exec();
 }
