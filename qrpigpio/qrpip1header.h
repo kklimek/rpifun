@@ -3,9 +3,11 @@
 
 #include <QObject>
 
-class QRpiGpioPrivate;
+namespace QRpi {
 
-class QRpiGpio: public QObject
+class P1HeaderPrivate;
+
+class P1Header: public QObject
 {
 Q_OBJECT
 
@@ -49,8 +51,8 @@ enum PinMode {
 };
 
 public:
-	QRpiGpio(QObject * parent = NULL);
-	~QRpiGpio();
+	P1Header(QObject * parent = NULL);
+	~P1Header();
 
 	bool setOutput(Pin, PinValue initialValue = PinValue_High);
 	bool setInput(Pin);
@@ -60,14 +62,15 @@ public:
 	void delayUs(quint32 microseconds);
 
 signals:
-	void interrupted(QRpiGpio::Pin, QRpiGpio::PinValue);
-	void raised(QRpiGpio::Pin);
-	void fallen(QRpiGpio::Pin);
+	void interrupted(QRpi::P1Header::Pin, QRpi::P1Header::PinValue);
+	void raised(QRpi::P1Header::Pin);
+	void fallen(QRpi::P1Header::Pin);
 
 private:
-	Q_DECLARE_PRIVATE(QRpiGpio);
-	QRpiGpioPrivate * const d_ptr;
+	Q_DECLARE_PRIVATE(P1Header);
+	P1HeaderPrivate * const d_ptr;
 };
 
+} // namespace QRpi
 #endif // __QRPIGPIO_H_
 
