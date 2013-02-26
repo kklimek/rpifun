@@ -1,6 +1,8 @@
 #include <QCoreApplication>
 #include <QByteArray>
 #include <QString>
+#include <QDateTime>
+#include <QDebug>
 
 #include <QRpiGpio>
 
@@ -17,6 +19,23 @@
 #define LCD_LINE_1 0x80
 #define LCD_LINE_2 0xC0
 
+
+class DebugOutput: public QObject
+{
+	Q_OBJECT
+public slots:
+	void interrupted(QRpiGpio::Pin pin, QRpiGpio::PinValue val) {
+		qDebug() << Q_FUNC_INFO << pin << val;
+	}
+
+	void fallen(QRpiGpio::Pin pin) {
+		qDebug() << Q_FUNC_INFO << pin;
+	}
+
+	void raised(QRpiGpio::Pin pin) {
+		qDebug() << Q_FUNC_INFO << pin;
+	}
+};
 
 void lcd_pulse(QRpiGpio * gpio)
 {
@@ -110,18 +129,31 @@ int main(int argc, char * argv[])
 {
 	QCoreApplication app(argc, argv);
 
+	DebugOutput out;
 	QRpiGpio gpio;
-	gpio.setPinMode(LCD_E, QRpiGpio::PinMode_Output);
-	gpio.setPinMode(LCD_RS, QRpiGpio::PinMode_Output);
-	gpio.setPinMode(LCD_D4, QRpiGpio::PinMode_Output);
-	gpio.setPinMode(LCD_D5, QRpiGpio::PinMode_Output);
-	gpio.setPinMode(LCD_D6, QRpiGpio::PinMode_Output);
-	gpio.setPinMode(LCD_D7, QRpiGpio::PinMode_Output);
+
+	QObject::connect(&gpio, SIGNAL(interrupted(QRpiGpio::Pin, QRpiGpio::PinValue)), &out, SLOT(interrupted(QRpiGpio::Pin, QRpiGpio::PinValue)));
+	QObject::connect(&gpio, SIGNAL(fallen(QRpiGpio::Pin)), &out, SLOT(fallen(QRpiGpio::Pin)));
+	QObject::connect(&gpio, SIGNAL(raised(QRpiGpio::Pin)), &out, SLOT(raised(QRpiGpio::Pin)));
+
+	gpio.setOutput(LCD_E, QRpiGpio::PinValue_High);
+	gpio.setOutput(LCD_RS, QRpiGpio::PinValue_High);
+	gpio.setOutput(LCD_D4, QRpiGpio::PinValue_High);
+	gpio.setOutput(LCD_D5, QRpiGpio::PinValue_High);
+	gpio.setOutput(LCD_D6, QRpiGpio::PinValue_High);
+	gpio.setOutput(LCD_D7, QRpiGpio::PinValue_High);
 
 	lcd_init(&gpio);
 
 	lcd_write_string(&gpio, "123");
 	lcd_write_string(&gpio, "Testing", true);
 
-	return 0;
+
+	QRpiGpio::Pin pinNo = QRpiGpio::Pin_GPIO7;
+
+	gpio.setInput(pinNo);
+
+	return app.exec();
 }
+
+#include "main.moc"
