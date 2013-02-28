@@ -3,10 +3,10 @@ LIBS += -lwiringPi
 INCLUDEPATH += $$PWD
 
 HEADERS += \
-	$$PWD/qrpip1header.h \
-	$$PWD/qrpitactswitch.h
+	$$PWD/qrpigpiop1header.h \
+	$$PWD/qrpigpiotactswitch.h
 
 SOURCES += \
-	$$PWD/qrpip1header.cpp \
-	$$PWD/qrpitactswitch.cpp
+	$$PWD/qrpigpiop1header.cpp \
+	$$PWD/qrpigpiotactswitch.cpp
 

@@ -1,25 +1,25 @@
 #include <QTimer>
 #include <QDebug>
 
-#include "qrpip1header.h"
+#include "qrpigpiop1header.h"
 
-#include "qrpitactswitch.h"
+#include "qrpigpiotactswitch.h"
 
-namespace QRpi {
+namespace QRpiGpio {
 
 class TactSwitchPrivate: public QObject
 {
 	Q_OBJECT
 public:
-	TactSwitchPrivate(P1Header::Pin p, TactSwitch * parent)
+	TactSwitchPrivate(Pin p, TactSwitch * parent)
 		: QObject(parent)
 		, q_ptr(parent)
 		, header(new P1Header(this))
 	{
-		debounce[P1Header::PinValue_High] = NULL;
-		debounce[P1Header::PinValue_Low] = NULL;
+		debounce[PinValue_High] = NULL;
+		debounce[PinValue_Low] = NULL;
 
-		QHash<P1Header::PinValue, QTimer *>::iterator it;
+		QHash<PinValue, QTimer *>::iterator it;
 
 		for(it = debounce.begin(); it != debounce.end(); it++) {
 			QTimer * timer = new QTimer(this);
@@ -28,7 +28,7 @@ public:
 			*it = timer;
 		}
 
-		connect(header, SIGNAL(interrupted(QRpi::P1Header::Pin, QRpi::P1Header::PinValue)), this, SLOT(interrupted(QRpi::P1Header::Pin, QRpi::P1Header::PinValue)));
+		connect(header, SIGNAL(interrupted(QRpiGpio::Pin, QRpiGpio::PinValue)), this, SLOT(interrupted(QRpiGpio::Pin, QRpiGpio::PinValue)));
 
 		header->setInput(p);
 	}
@@ -37,10 +37,10 @@ public:
 	TactSwitch * const q_ptr;
 	P1Header * header;
 
-	QHash<P1Header::PinValue, QTimer *> debounce;
+	QHash<PinValue, QTimer *> debounce;
 
 public slots:
-	void interrupted(QRpi::P1Header::Pin pin, QRpi::P1Header::PinValue val)
+	void interrupted(QRpiGpio::Pin pin, QRpiGpio::PinValue val)
 	{
 		// TODO: clicked, doubleClicked, longClicked
 		// TODO: event order - map high/low to pressed/released
@@ -48,11 +48,11 @@ public slots:
 			debounce[val]->start();
 
 			switch(val) {
-				case P1Header::PinValue_High:
+				case PinValue_High:
 					emit pressed();
 					break;
 
-				case P1Header::PinValue_Low:
+				case PinValue_Low:
 					emit released();
 					break;
 			}
@@ -70,7 +70,7 @@ signals:
 	void longClicked();
 };
 
-TactSwitch::TactSwitch(P1Header::Pin p, QObject * parent)
+TactSwitch::TactSwitch(Pin p, QObject * parent)
 	: QObject(parent)
 	, d_ptr(new TactSwitchPrivate(p, this))
 {
@@ -88,6 +88,6 @@ void TactSwitch::setDebounceInterval(int miliseconds)
 	}
 }
 
-#include "qrpitactswitch.moc"
+#include "qrpigpiotactswitch.moc"
 
-} // namespace QRpi
+} // namespace QRpiGpio

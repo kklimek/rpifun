@@ -3,9 +3,9 @@
 
 #include <QObject>
 
-#include <QRpiP1Header>
+#include <QRpiGpioGlobal>
 
-namespace QRpi {
+namespace QRpiGpio {
 
 class TactSwitchPrivate;
 
@@ -14,7 +14,7 @@ class TactSwitch: public QObject
 	Q_OBJECT
 public:
 	// TODO: HIGH/LOW -> PRESSED/RELEASED mapping
-	TactSwitch(P1Header::Pin p, QObject * parent = NULL);
+	TactSwitch(Pin p, QObject * parent = NULL);
 	void setDebounceInterval(int miliseconds);
 	// > DebounceInterval
 	void setDoubleClickInterval(int miliseconds);
@@ -33,7 +33,7 @@ private:
 	TactSwitchPrivate * const d_ptr;
 };
 
-} // namespace QRpi
+} // namespace QRpiGpio
 
 #endif // __QRPITACTSWITCH_H_
 
