@@ -175,6 +175,18 @@ bool P1Header::writePin(Pin pin, PinValue val)
 	return false;
 }
 
+PinValue P1Header::readPin(Pin pin)
+{
+	int val = digitalRead(pin);
+	PinValue retval = PinValue_Low;
+
+	if(val == HIGH) {
+		retval = PinValue_High;
+	}
+
+	return retval;
+}
+
 void P1Header::delayMs(quint32 miliseconds)
 {
 	delay(miliseconds);

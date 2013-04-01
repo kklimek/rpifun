@@ -21,6 +21,7 @@ public:
 	bool setOutput(Pin, PinValue initialValue = PinValue_High);
 	bool setInput(Pin);
 	bool writePin(Pin, PinValue);
+	PinValue readPin(Pin);
 
 	void delayMs(quint32 miliseconds);
 	void delayUs(quint32 microseconds);
