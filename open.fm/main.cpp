@@ -20,31 +20,6 @@
 #define LCD_LINE_2 0xC0
 
 
-class DebugOutput: public QObject
-{
-	Q_OBJECT
-public slots:
-	void interrupted(QRpiGpio::Pin pin, QRpiGpio::PinValue val) {
-		qDebug() << Q_FUNC_INFO << pin << val;
-	}
-
-	void fallen(QRpiGpio::Pin pin) {
-		qDebug() << Q_FUNC_INFO << pin;
-	}
-
-	void raised(QRpiGpio::Pin pin) {
-		qDebug() << Q_FUNC_INFO << pin;
-	}
-
-	void pressed() {
-		qDebug() << Q_FUNC_INFO << sender();
-	}
-
-	void released() {
-		qDebug() << Q_FUNC_INFO << sender();
-	}
-};
-
 void lcd_pulse(QRpiGpio::P1Header * gpio)
 {
 	gpio->delayUs(50);
@@ -125,13 +100,58 @@ void lcd_write_string(QRpiGpio::P1Header *gpio, QString str, bool secondLine = f
 {
 	lcd_byte(gpio, secondLine ? LCD_LINE_2 : LCD_LINE_1, LCD_MODE_CMD);
 
-	str = str.left(16);
+	str = QString("%1").arg(str.left(16), -16, QLatin1Char(' '));
+	qDebug() << str;
 
 	for(int i = 0; i < str.size(); ++i) {
-		qDebug("%d", str.at(i).unicode());
+//		qDebug("%d", str.at(i).unicode());
 		lcd_byte(gpio, str.at(i).unicode(), LCD_MODE_CHR);
 	}
 }
+
+QRpiGpio::P1Header * lcd;
+
+class DebugOutput: public QObject
+{
+	Q_OBJECT
+public slots:
+	void interrupted(QRpiGpio::Pin pin, QRpiGpio::PinValue val) {
+		qDebug() << Q_FUNC_INFO << pin << val;
+	}
+
+	void fallen(QRpiGpio::Pin pin) {
+		qDebug() << Q_FUNC_INFO << pin;
+	}
+
+	void raised(QRpiGpio::Pin pin) {
+		qDebug() << Q_FUNC_INFO << pin;
+	}
+
+	void pressed() {
+		qDebug() << Q_FUNC_INFO << sender();
+		lcd_write_string(lcd, "pressed");
+	}
+
+	void released() {
+		qDebug() << Q_FUNC_INFO << sender();
+		lcd_write_string(lcd, "released");
+	}
+
+	void clicked() {
+		qDebug() << Q_FUNC_INFO << sender();
+		lcd_write_string(lcd, "clicked");
+	}
+
+	void doubleClicked() {
+		qDebug() << Q_FUNC_INFO << sender();
+		lcd_write_string(lcd, "doubleClicked");
+	}
+
+	void longPressed() {
+		qDebug() << Q_FUNC_INFO << sender();
+		lcd_write_string(lcd, "longPressed");
+	}
+};
 
 int main(int argc, char * argv[])
 {
@@ -139,6 +159,7 @@ int main(int argc, char * argv[])
 
 	DebugOutput out;
 	QRpiGpio::P1Header gpio;
+	lcd = &gpio;
 
 	gpio.setOutput(LCD_E, QRpiGpio::PinValue_High);
 	gpio.setOutput(LCD_RS, QRpiGpio::PinValue_High);
@@ -149,15 +170,19 @@ int main(int argc, char * argv[])
 
 	lcd_init(&gpio);
 
-	lcd_write_string(&gpio, "123");
-	lcd_write_string(&gpio, "Testing", true);
 
+	lcd_write_string(&gpio, "");
+	lcd_write_string(&gpio, "", true);
 
 	QRpiGpio::TactSwitch tact(QRpiGpio::Pin_GPIO7);
 	tact.setDebounceInterval(200); // I bought reeaaaaaly crappy tact switches
 
 	QObject::connect(&tact, SIGNAL(pressed()), &out, SLOT(pressed()));
 	QObject::connect(&tact, SIGNAL(released()), &out, SLOT(released()));
+	QObject::connect(&tact, SIGNAL(clicked()), &out, SLOT(clicked()));
+	QObject::connect(&tact, SIGNAL(doubleClicked()), &out, SLOT(doubleClicked()));
+	QObject::connect(&tact, SIGNAL(longPressed()), &out, SLOT(longPressed()));
+
 
 	return app.exec();
 }
