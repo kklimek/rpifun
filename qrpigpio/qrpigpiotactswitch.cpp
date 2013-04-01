@@ -1,4 +1,5 @@
 #include <QTimer>
+#include <QDateTime>
 #include <QDebug>
 
 #include "qrpigpiop1header.h"
@@ -11,54 +12,108 @@ class TactSwitchPrivate: public QObject
 {
 	Q_OBJECT
 public:
-	TactSwitchPrivate(Pin p, TactSwitch * parent)
+	TactSwitchPrivate(Pin p, PinValue pressed, TactSwitch * parent)
 		: QObject(parent)
 		, q_ptr(parent)
 		, header(new P1Header(this))
+		, debounceInterval(50)
+		, pressedValue(pressed)
 	{
-		debounce[PinValue_High] = NULL;
-		debounce[PinValue_Low] = NULL;
+		switch(pressedValue) {
+		case PinValue_High:
+			currentValue = PinValue_Low;
+			break;
 
-		QHash<PinValue, QTimer *>::iterator it;
-
-		for(it = debounce.begin(); it != debounce.end(); it++) {
-			QTimer * timer = new QTimer(this);
-			timer->setSingleShot(true);
-			timer->setInterval(20);
-			*it = timer;
+		case PinValue_Low:
+			currentValue = PinValue_High;
+			break;
 		}
 
 		connect(header, SIGNAL(interrupted(QRpiGpio::Pin, QRpiGpio::PinValue)), this, SLOT(interrupted(QRpiGpio::Pin, QRpiGpio::PinValue)));
 
 		header->setInput(p);
+
+		connect(this, SIGNAL(pressed()), q_ptr, SIGNAL(pressed()));
+		connect(this, SIGNAL(released()), q_ptr, SIGNAL(released()));
+		connect(this, SIGNAL(clicked()), q_ptr, SIGNAL(clicked()));
+		connect(this, SIGNAL(doubleClicked()), q_ptr, SIGNAL(doubleClicked()));
+		connect(this, SIGNAL(longPressed()), q_ptr, SIGNAL(longPressed()));
+
+		longPressedTimer.setSingleShot(true);
+		longPressedTimer.setInterval(400);
+		clickedTimer.setSingleShot(true);
+		clickedTimer.setInterval(400);
+
+		connect(&longPressedTimer, SIGNAL(timeout()), this, SLOT(emitLongPressed()));
+		connect(&clickedTimer, SIGNAL(timeout()), this, SIGNAL(clicked()));
+
+		pDebounce = rDebounce = QDateTime::currentDateTimeUtc().addMSecs(-1 * debounceInterval);
 	}
 
 public:
 	TactSwitch * const q_ptr;
 	P1Header * header;
+	quint16 debounceInterval;
+	QTimer longPressedTimer;
+	QTimer clickedTimer;
 
-	QHash<PinValue, QTimer *> debounce;
+	QDateTime pDebounce;
+	QDateTime rDebounce;
+
+	PinValue pressedValue;
+	PinValue currentValue;
 
 public slots:
 	void interrupted(QRpiGpio::Pin pin, QRpiGpio::PinValue val)
 	{
-		// TODO: clicked, doubleClicked, longClicked
-		// TODO: event order - map high/low to pressed/released
-		if ( ! debounce[val]->isActive() ) {
-			debounce[val]->start();
+		Q_UNUSED(pin); // we get only one pin info from header
+		QDateTime curr = QDateTime::currentDateTimeUtc();
 
-			switch(val) {
-				case PinValue_High:
-					emit pressed();
-					break;
+		if ( val != currentValue ) {
+			if ( val == pressedValue ) {
+				if ( pDebounce.msecsTo(curr) < debounceInterval ) {
+					qDebug() << Q_FUNC_INFO << "pressed debounce! ignoring";
+					return;
+				}
 
-				case PinValue_Low:
-					emit released();
-					break;
+				pDebounce = curr;
+				longPressedTimer.start();
+				emit pressed();
+			} else {
+				if ( rDebounce.msecsTo(curr) < debounceInterval ) {
+					qDebug() << Q_FUNC_INFO << "pressed debounce! ignoring";
+					return;
+				}
+
+				rDebounce = curr;
+				longPressedTimer.stop();
+				emit released();
+				if(clickedTimer.isActive()) {
+					clickedTimer.stop();
+					emit doubleClicked();
+				} else {
+					clickedTimer.start();
+				}
 			}
-		} else {
-			qDebug() << Q_FUNC_INFO << q_ptr << "bounce, ignoring";
+
+			currentValue = val;
 		}
+	}
+
+	void emitLongPressed()
+	{
+		// switch current value so release will be ignored
+		switch(pressedValue) {
+		case PinValue_High:
+			currentValue = PinValue_Low;
+			break;
+
+		case PinValue_Low:
+			currentValue = PinValue_High;
+			break;
+		}
+
+		emit longPressed();
 	}
 
 signals:
@@ -67,25 +122,39 @@ signals:
 
 	void clicked();
 	void doubleClicked();
-	void longClicked();
+	void longPressed();
 };
 
 TactSwitch::TactSwitch(Pin p, QObject * parent)
 	: QObject(parent)
-	, d_ptr(new TactSwitchPrivate(p, this))
+	, d_ptr(new TactSwitchPrivate(p, PinValue_High, this))
 {
-	connect(d_ptr, SIGNAL(pressed()), this, SIGNAL(pressed()));
-	connect(d_ptr, SIGNAL(released()), this, SIGNAL(released()));
-	connect(d_ptr, SIGNAL(clicked()), this, SIGNAL(clicked()));
-	connect(d_ptr, SIGNAL(doubleClicked()), this, SIGNAL(doubleClicked()));
-	connect(d_ptr, SIGNAL(longClicked()), this, SIGNAL(longClicked()));
 }
 
-void TactSwitch::setDebounceInterval(int miliseconds)
+TactSwitch::TactSwitch(Pin p, PinValue pressedValue, QObject * parent)
+	: QObject(parent)
+	, d_ptr(new TactSwitchPrivate(p, pressedValue, this))
 {
-	foreach(QTimer * timer, d_ptr->debounce) {
-		timer->setInterval(miliseconds);
-	}
+}
+
+void TactSwitch::setDebounceInterval(quint16 miliseconds)
+{
+	Q_D(TactSwitch);
+	d->debounceInterval = miliseconds;
+	d->rDebounce = QDateTime::currentDateTimeUtc().addMSecs(-1 * d->debounceInterval);
+	d->pDebounce = d->rDebounce;
+}
+
+void TactSwitch::setDoubleClickInterval(quint16 miliseconds)
+{
+	Q_D(TactSwitch);
+	d->clickedTimer.setInterval(miliseconds);
+}
+
+void TactSwitch::setLongPressedInterval(quint16 miliseconds)
+{
+	Q_D(TactSwitch);
+	d->longPressedTimer.setInterval(miliseconds);
 }
 
 #include "qrpigpiotactswitch.moc"

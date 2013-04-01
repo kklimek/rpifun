@@ -5,6 +5,7 @@
 
 #include <QRpiGpioGlobal>
 
+// TODO: docs!
 namespace QRpiGpio {
 
 class TactSwitchPrivate;
@@ -13,12 +14,11 @@ class TactSwitch: public QObject
 {
 	Q_OBJECT
 public:
-	// TODO: HIGH/LOW -> PRESSED/RELEASED mapping
 	TactSwitch(Pin p, QObject * parent = NULL);
-	void setDebounceInterval(int miliseconds);
-	// > DebounceInterval
-	void setDoubleClickInterval(int miliseconds);
-	void setLongClickedInterval(int miliseconds);
+	TactSwitch(Pin p, PinValue pressedValue, QObject * parent = NULL);
+	void setDebounceInterval(quint16 miliseconds);
+	void setDoubleClickInterval(quint16 miliseconds);
+	void setLongPressedInterval(quint16 miliseconds);
 
 signals:
 	void pressed();
@@ -26,7 +26,7 @@ signals:
 
 	void clicked();
 	void doubleClicked();
-	void longClicked();
+	void longPressed();
 
 private:
 	Q_DECLARE_PRIVATE(TactSwitch);
