@@ -1,5 +1,5 @@
-#ifndef __QRPITACTSWITCH_H_
-#define __QRPITACTSWITCH_H_
+#ifndef __QRPIGPIOTACTSWITCH_H_
+#define __QRPIGPIOTACTSWITCH_H_
 
 #include <QObject>
 
@@ -35,5 +35,5 @@ private:
 
 } // namespace QRpiGpio
 
-#endif // __QRPITACTSWITCH_H_
+#endif // __QRPIGPIOTACTSWITCH_H_
 

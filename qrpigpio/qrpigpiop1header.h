@@ -1,5 +1,5 @@
-#ifndef __QRPIP1HEADER_H_
-#define __QRPIP1HEADER_H_
+#ifndef __QRPIGPIOP1HEADER_H_
+#define __QRPIGPIOP1HEADER_H_
 
 #include <QObject>
 
@@ -37,5 +37,5 @@ private:
 };
 
 } // namespace QRpiGpio
-#endif // __QRPIP1HEADER_H_
+#endif // __QRPIGPIOP1HEADER_H_
 
